@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>File-Based Notes Server</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                📝
+            </div>
+
+            <div>
+
+                <h1>Notes</h1>
+
+                <span>
+                    File-Based Server
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <button class="primary-btn new-note-btn">
+            + New Note
+        </button>
+
+
+        <nav class="sidebar-nav">
+
+            <button
+                class="nav-item active"
+                data-section="all"
+            >
+
+                <span>🏠</span>
+
+                <span>
+                    All Notes
+                </span>
+
+                <b id="allCount">
+                    0
+                </b>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-section="favorites"
+            >
+
+                <span>⭐</span>
+
+                <span>
+                    Favorites
+                </span>
+
+                <b id="favoriteCount">
+                    0
+                </b>
+
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-section="trash"
+            >
+
+                <span>🗑️</span>
+
+                <span>
+                    Trash
+                </span>
+
+                <b id="trashCount">
+                    0
+                </b>
+
+            </button>
+
+        </nav>
+
+
+        <!-- Storage -->
+
+        <div class="storage">
+
+            <div class="storage-title">
+
+                <span>
+                    Storage
+                </span>
+
+                <span id="storageText">
+                    0 notes
+                </span>
+
+            </div>
+
+
+            <div class="storage-bar">
+
+                <div id="storageFill"></div>
+
+            </div>
+
+
+            <small>
+                Persistent storage: Notes.json
+            </small>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="main">
+
+
+        <!-- Header -->
+
+        <header class="header">
+
+            <div>
+
+                <h2 id="pageTitle">
+                    My Notes
+                </h2>
+
+                <p id="pageSubtitle">
+                    Manage your notes easily
+                </p>
+
+            </div>
+
+
+            <!-- Search -->
+
+            <div class="search-box">
+
+                <span>
+                    🔍
+                </span>
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search notes..."
+                    autocomplete="off"
+                >
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =================================================
+             STATISTICS
+        ================================================== -->
+
+        <section class="stats">
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon purple">
+                    🗂️
+                </div>
+
+
+                <div>
+
+                    <h3 id="totalNotes">
+                        0
+                    </h3>
+
+                    <p>
+                        Total Notes
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon orange">
+                    🕒
+                </div>
+
+
+                <div>
+
+                    <h3 id="recentNotes">
+                        0
+                    </h3>
+
+                    <p>
+                        Recent Notes
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             NOTES SECTION
+        ================================================== -->
+
+        <section class="notes-section">
+
+
+            <div class="section-header">
+
+
+                <div>
+
+                    <h2 id="sectionTitle">
+                        All Notes
+                    </h2>
+
+                    <p id="sectionCount">
+                        0 notes
+                    </p>
+
+                </div>
+
+
+                <button class="primary-btn new-note-btn">
+
+                    + Create Note
+
+                </button>
+
+            </div>
+
+
+
+            <!-- JavaScript will generate cards here -->
+
+            <div
+                id="notesGrid"
+                class="notes-grid"
+            ></div>
+
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         CREATE / EDIT NOTE MODAL
+    ====================================================== -->
+
+    <div
+        class="modal-overlay"
+        id="noteModal"
+    >
+
+
+        <div class="note-modal">
+
+
+            <div class="modal-header">
+
+
+                <div>
+
+                    <span class="modal-label">
+                        NOTE EDITOR
+                    </span>
+
+
+                    <h2 id="modalTitle">
+                        Create New Note
+                    </h2>
+
+                </div>
+
+
+                <button
+                    class="close-btn"
+                    id="closeModal"
+                    type="button"
+                >
+
+                    ×
+
+                </button>
+
+            </div>
+
+
+
+            <!-- Title -->
+
+            <label for="noteTitle">
+                Title
+            </label>
+
+
+            <input
+                type="text"
+                id="noteTitle"
+                placeholder="Enter note title..."
+                autocomplete="off"
+            >
+
+
+
+            <!-- Content -->
+
+            <label for="noteContent">
+                Content
+            </label>
+
+
+            <textarea
+                id="noteContent"
+                placeholder="Start writing your note..."
+            ></textarea>
+
+
+
+            <!-- Buttons -->
+
+            <div class="modal-actions">
+
+
+                <button
+                    class="secondary-btn"
+                    id="cancelNote"
+                    type="button"
+                >
+
+                    Cancel
+
+                </button>
+
+
+                <button
+                    class="primary-btn"
+                    id="saveNote"
+                    type="button"
+                >
+
+                    Save Note
+
+                </button>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         TOAST MESSAGE
+    ====================================================== -->
+
+    <div
+        id="toast"
+        class="toast"
+    ></div>
+
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

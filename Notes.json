@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "C++ OOP",
+    "content": "C++ supports Object-Oriented Programming using classes and objects. Important OOP concepts include encapsulation, abstraction, inheritance, and polymorphism, which improve code reusability and organization.",
+    "createdAt": "2026-10-04 14:06",
+    "updatedAt": "2026-10-04 14:08",
+    "favorite": true,
+    "deleted": false
+  },
+  {
+    "id": 2,
+    "title": "DBMS",
+    "content": "Database Management Systems are software used to create, store, organize, manage, and retrieve data efficiently. They also help maintain data security and consistency.",
+    "createdAt": "2026-10-04 14:08",
+    "updatedAt": "2026-10-04 14:08",
+    "favorite": false,
+    "deleted": false
+  },
+  {
+    "id": 3,
+    "title": "DSA",
+    "content": "Data Structures and Algorithms help organize data and solve problems efficiently. Important topics include arrays, searching, sorting, recursion, stacks, queues, and other data structures.",
+    "createdAt": "2026-10-04 14:08",
+    "updatedAt": "2026-10-04 14:08",
+    "favorite": false,
+    "deleted": false
+  }
+]
