@@ -1,10 +1,44 @@
+#ifdef _WIN32
+
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
+#pragma comment(lib, "ws2_32.lib")
+
+#else
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+
+#define SOCKET int
+#define INVALID_SOCKET (-1)
+#define SOCKET_ERROR (-1)
+
+#define closesocket close
+
+inline int WSAStartup(unsigned short, void*)
+{
+    return 0;
+}
+
+inline int WSACleanup()
+{
+    return 0;
+}
+
+#define MAKEWORD(a, b) 0
+
+#endif
+
+
 #include <algorithm>
 #include <ctime>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -12,8 +46,6 @@
 #include <vector>
 
 using namespace std;
-
-#pragma comment(lib, "ws2_32.lib")
 
 // ============================================================
 // NOTE CLASS
@@ -58,24 +90,28 @@ public:
     }
 
     string getTime()
-    {
-        time_t now = time(nullptr);
+{
+    time_t now = time(nullptr);
 
-        tm localTime{};
+    tm localTime{};
 
-        localtime_s(&localTime, &now);
+#ifdef _WIN32
+    localtime_s(&localTime, &now);
+#else
+    localtime_r(&now, &localTime);
+#endif
 
-        char buffer[30];
+    char buffer[30];
 
-        strftime(
-            buffer,
-            sizeof(buffer),
-            "%Y-%m-%d %H:%M",
-            &localTime
-        );
+    strftime(
+        buffer,
+        sizeof(buffer),
+        "%Y-%m-%d %H:%M",
+        &localTime
+    );
 
-        return string(buffer);
-    }
+    return string(buffer);
+}
 
 
     string escapeJson(const string& text)
@@ -1459,8 +1495,9 @@ void handleClient(
 
 int main()
 {
-    WSADATA wsaData;
+#ifdef _WIN32
 
+    WSADATA wsaData;
 
     if (
         WSAStartup(
@@ -1476,9 +1513,33 @@ int main()
         return 1;
     }
 
+#endif
+
 
     NoteManager manager;
 
+
+    // --------------------------------------------------------
+    // PORT
+    // Render provides PORT through environment variables.
+    // When running locally, use 8080.
+    // --------------------------------------------------------
+
+    const char* environmentPort =
+        getenv("PORT");
+
+    int port = 8080;
+
+    if (environmentPort != nullptr)
+    {
+        port =
+            atoi(environmentPort);
+    }
+
+
+    // --------------------------------------------------------
+    // CREATE SOCKET
+    // --------------------------------------------------------
 
     SOCKET serverSocket =
         socket(
@@ -1497,42 +1558,55 @@ int main()
             << "Socket creation failed."
             << endl;
 
+#ifdef _WIN32
         WSACleanup();
+#endif
 
         return 1;
     }
 
 
-    sockaddr_in serverAddress{};
+    // --------------------------------------------------------
+    // SERVER ADDRESS
+    // --------------------------------------------------------
 
+    sockaddr_in serverAddress{};
 
     serverAddress.sin_family =
         AF_INET;
 
     serverAddress.sin_port =
-        htons(8080);
+        htons(port);
 
+
+    // Listen on all network interfaces.
+    // Required for deployment.
 
     inet_pton(
         AF_INET,
-        "127.0.0.1",
+        "0.0.0.0",
         &serverAddress.sin_addr
     );
 
 
-    int option = 1;
+    // --------------------------------------------------------
+    // ALLOW PORT REUSE
+    // --------------------------------------------------------
 
+    int option = 1;
 
     setsockopt(
         serverSocket,
         SOL_SOCKET,
         SO_REUSEADDR,
-        reinterpret_cast<char*>(
-            &option
-        ),
+        reinterpret_cast<char*>(&option),
         sizeof(option)
     );
 
+
+    // --------------------------------------------------------
+    // BIND
+    // --------------------------------------------------------
 
     if (
         bind(
@@ -1552,11 +1626,17 @@ int main()
             serverSocket
         );
 
+#ifdef _WIN32
         WSACleanup();
+#endif
 
         return 1;
     }
 
+
+    // --------------------------------------------------------
+    // LISTEN
+    // --------------------------------------------------------
 
     if (
         listen(
@@ -1573,11 +1653,17 @@ int main()
             serverSocket
         );
 
+#ifdef _WIN32
         WSACleanup();
+#endif
 
         return 1;
     }
 
+
+    // --------------------------------------------------------
+    // SERVER INFORMATION
+    // --------------------------------------------------------
 
     cout << endl;
 
@@ -1594,14 +1680,9 @@ int main()
         << endl;
 
     cout
-        << "Server running at:"
+        << "Server running on port: "
+        << port
         << endl;
-
-    cout
-        << "http://127.0.0.1:8080"
-        << endl;
-
-    cout << endl;
 
     cout
         << "Data file: Notes.json"
@@ -1615,6 +1696,10 @@ int main()
         << "===================================="
         << endl;
 
+
+    // --------------------------------------------------------
+    // ACCEPT CLIENTS
+    // --------------------------------------------------------
 
     while (true)
     {
@@ -1642,11 +1727,17 @@ int main()
     }
 
 
+    // --------------------------------------------------------
+    // CLEANUP
+    // --------------------------------------------------------
+
     closesocket(
         serverSocket
     );
 
+#ifdef _WIN32
     WSACleanup();
+#endif
 
     return 0;
 }
